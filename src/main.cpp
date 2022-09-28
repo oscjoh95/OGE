@@ -10,6 +10,7 @@
 #include <model.h>
 
 #include <iostream>
+#include <filesystem>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -68,9 +69,11 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // Build and compile the shader program
-    Shader modelShader("shaders/light_shader.vs", "shaders/light_shader.fs");
-
-    Model model("resources/objects/backpack/backpack.obj");
+    std::string dir = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path().string();
+    Shader modelShader((dir + "/shaders/light_shader.vs").c_str(), (dir + "/shaders/light_shader.fs").c_str());
+    
+    // Load the model
+    Model model(dir + "/resources/objects/backpack/backpack.obj");
 
     // Uncomment to set wireframe mode on
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
