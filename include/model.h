@@ -42,10 +42,30 @@ class Model {
         }
     }
 
+    /**
+     * Gets max coordinates for the model.
+     * 
+     * @returns The max coordinates
+     */
+    glm::vec3 GetMaxCoords() {
+        return aabb_max;
+    }
+
+    /**
+     * Gets min coordinates for the model.
+     * 
+     * @returns The min coordinates
+     */
+    glm::vec3 GetMinCoords() {
+        return aabb_min;
+    }
+
  private:
     std::vector<Mesh> meshes;
     std::string directory;
     std::vector<Texture> loaded_textures;
+    glm::vec3 aabb_max = glm::vec3(-1000.0f, -1000.0f, -1000.0f);
+    glm::vec3 aabb_min = glm::vec3(1000.0f, 1000.0f, 1000.0f);
 
     /**
      * Loads a model into the assimp tree structure. Then create mesh objects
@@ -111,6 +131,25 @@ class Model {
             vector.y = mesh->mVertices[i].y;
             vector.z = mesh->mVertices[i].z;
             vertex.Position = vector;
+            // Set min and max coordinates
+            if (vector.x < aabb_min.x) {
+                aabb_min.x = vector.x;
+            }
+            if (vector.x > aabb_max.x) {
+                aabb_max.x = vector.x;
+            }
+            if (vector.y < aabb_min.y) {
+                aabb_min.y = vector.y;
+            }
+            if (vector.y > aabb_max.y) {
+                aabb_max.y = vector.y;
+            }
+            if (vector.z < aabb_min.z) {
+                aabb_min.z = vector.z;
+            }
+            if (vector.z > aabb_max.z) {
+                aabb_max.z = vector.z;
+            }
             // Normals
             vector.x = mesh->mNormals[i].x;
             vector.y = mesh->mNormals[i].y;
