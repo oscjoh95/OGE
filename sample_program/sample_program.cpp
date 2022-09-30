@@ -8,6 +8,7 @@
 #include <shader.h>
 #include <camera.h>
 #include <model.h>
+#include <scene.h>
 
 #include <iostream>
 #include <filesystem>
@@ -15,6 +16,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void processInput(GLFWwindow* window);
 
 // Settings
@@ -30,6 +32,9 @@ bool firstMouse = true;
 // Timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// Clicking
+bool markObject = false; 
 
 int main(int argc, char** argv) { 
     // Initialize and configure glfw
@@ -51,9 +56,10 @@ int main(int argc, char** argv) {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     // Capture mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Load OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -73,6 +79,10 @@ int main(int argc, char** argv) {
     
     // Load the model
     Model model(dir + "/resources/objects/backpack/backpack.obj");
+    glm::mat4 modelMat = glm::mat4(1.0f);
+    Scene scene;
+    scene.AddModel(&model, modelMat, &modelShader);
+    scene.SetCamera(&camera);
 
     // Uncomment to set wireframe mode on
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -109,20 +119,29 @@ int main(int argc, char** argv) {
         modelShader.setFloat("pointLights[0].linear", 0.09f);
         modelShader.setFloat("pointLights[0].quadratic", 0.032f);
 
-        // Calculate view and projection matrices
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        modelShader.setMat4("projection", projection);
-        modelShader.setMat4("view", view);
+        // Update matrices in the scene
+        scene.UpdateMatrices(SCR_WIDTH, SCR_HEIGHT);
 
-        // Calculate and set transform matrix
-        glm::mat4 modelMat = glm::mat4(1.0f);
-        modelMat = glm::translate(modelMat, glm::vec3(0.0f, 0.0f, 0.0f));
-        modelMat = glm::scale(modelMat, glm::vec3(1.0f, 1.0f, 1.0f));
-        modelShader.setMat4("model", modelMat);
+        // Check if any object are clicked
+        if (markObject) {
+            float dist;
+            double xPos, yPos;
+            glfwGetCursorPos(window, &xPos, &yPos);
+            Model* clickedObject;
+            if (scene.IsRayOBBIntersecting(
+                (float)xPos, (float)(SCR_HEIGHT - yPos),
+                SCR_WIDTH, SCR_HEIGHT,
+                dist,
+                clickedObject)) {
+                    std::cout << clickedObject << " was clicked at distance " << dist << std::endl;
+                } else {
+                    std::cout << "No object" << std::endl;
+                }
+            markObject = false;
+        }
 
-        // Render the model
-        model.Draw(modelShader);
+        // Draw scene
+        scene.Draw();
 
         // Swap buffers and poll for IO events
         glfwSwapBuffers(window);
@@ -196,4 +215,10 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     // Make sure the viewport matches the new window dimensions
     glViewport(0, 0, width, height);
+}
+
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        markObject = true;
 }

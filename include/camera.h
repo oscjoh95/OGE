@@ -74,113 +74,13 @@ class Camera {
         updateCameraVectors();
     }
 
-    /**
-     * Getter for the view matrix for the current camera settings.
-     * 
-     * @returns A mat4 containing the view transform matrix
-     */
-    glm::mat4 GetViewMatrix() {
-        return glm::lookAt(Position, Position + Front, Up);
-    }
-
-    /**
-     * Processes input from the keyboard to move the camera consistently
-     * even with different frame lengths.
-     *
-     * @param direction The direction to move the camera
-     * @param deltaTime The length of the frame in time
-     * 
-     * @returns void
-     */
-    void ProcessKeyboard (Camera_Movement direction, float deltaTime) {
-        float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD) {
-            Position += Front * velocity;
-        }
-        if (direction == BACKWARD) {
-            Position -= Front * velocity;
-        }
-        if (direction == LEFT) {
-            Position -= Right * velocity;
-        }
-        if (direction == RIGHT) {
-            Position += Right * velocity;
-        }
-        if (direction == UP) {
-            Position += WorldUp * velocity;
-        }
-        if (direction == DOWN) {
-            Position -= WorldUp * velocity;
-        }
-    }
-
-    /**
-     * Processes input from the mouse and rotates the camera accordingly
-     *
-     * @param xoffset The offset in x direction
-     * @param yoffset The offset in y direction
-     * @param constrainPitch Set to true to constrain the pitch to +-90
-     *                      degrees. Default true
-     *                       
-     * 
-     * @returns void
-     */
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
-
-        Yaw += xoffset;
-        Pitch += yoffset;
-
-        // Make sure the camera doesn't get flipped
-        if (constrainPitch) {
-            if (Pitch > 89.0f) {
-                Pitch = 89.0f;
-            }
-            if (Pitch < -89.0f) {
-                Pitch = -89.0f;
-            }
-        }
-
-        // Update the camera vectors now that we changed the yaw and pitch
-        updateCameraVectors();
-    }
-
-    /**
-     * Processess input from scroll wheel to zoom.
-     *
-     * @param yoffset The offset of the scroll wheel.
-     * 
-     * @returns void
-     */
-    void ProcessMouseScroll(float yoffset) {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f) {
-            Zoom = 1.0f;
-        }
-        if (Zoom > 45.0f) {
-            Zoom = 45.0f;
-        }
-    }
+    glm::mat4 GetViewMatrix();
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime);
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
+    void ProcessMouseScroll(float yoffset);
 
  private:
-    /**
-     * Updates the camera vectors.
-     * 
-     * @returns void
-     */
-    void updateCameraVectors() {
-        // Calculate new front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
-        // Calculate new right vector
-        Right = glm::normalize(glm::cross(Front, WorldUp));
-        // Calculate new up vector
-        Up = glm::normalize(glm::cross(Right, Front));
-    }
+    void updateCameraVectors();
 };
 
 #endif  // CAMERA_H
