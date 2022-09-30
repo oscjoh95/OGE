@@ -2,6 +2,7 @@
 #define SCENE_H
 
 #include <model.h>
+#include <camera.h>
 
 #include <vector>
 #include <iostream>
