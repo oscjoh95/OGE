@@ -81,7 +81,8 @@ int main(int argc, char** argv) {
     Model model(dir + "/resources/objects/backpack/backpack.obj");
     glm::mat4 modelMat = glm::mat4(1.0f);
     Scene scene;
-    scene.AddModel(&model, modelMat, &modelShader);
+    std::vector<UniformData<glm::vec3>> vec3_uniforms;
+    scene.AddModel(&model, modelMat, &modelShader, vec3_uniforms);
     scene.SetCamera(&camera);
 
     // Uncomment to set wireframe mode on

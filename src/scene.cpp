@@ -220,10 +220,25 @@ void Scene::Draw() {
     for (auto modelData : models) {
         // Set matrices and draw
         modelData.shader_p->use();
+        SetModelUniforms(modelData.shader_p, modelData.vec3_uniforms);
         modelData.shader_p->setMat4("view", view);
         modelData.shader_p->setMat4("projection", projection);
         modelData.shader_p->setMat4("model", modelData.modelMatrix);
         modelData.model_p->Draw(*modelData.shader_p);
+    }
+}
+
+/**
+ * Sets the uniforms for a model
+ * 
+ * @param shader_p A pointer to the shader for the model
+ * @param vec3_uniforms A vector of vec3 UniformData to set
+ * 
+ * @returns void
+ */
+void Scene::SetModelUniforms(Shader* shader_p, std::vector<UniformData<glm::vec3>> vec3_uniforms) {
+    for (auto uniform : vec3_uniforms) {
+        shader_p->setVec3(uniform.name, uniform.value);
     }
 }
 
@@ -236,8 +251,8 @@ void Scene::Draw() {
  * 
  * @returns void
  */
-void Scene::AddModel(Model* model_p, glm::mat4 modelMatrix, Shader* shader_p) {
-    models.push_back({model_p, modelMatrix, shader_p});
+void Scene::AddModel(Model* model_p, glm::mat4 modelMatrix, Shader* shader_p, std::vector<UniformData<glm::vec3>> vec3_uniforms) {
+    models.push_back({model_p, modelMatrix, shader_p, vec3_uniforms});
 }
 
 /**
