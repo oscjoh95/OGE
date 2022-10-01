@@ -241,6 +241,15 @@ void Scene::AddModel(Model* model_p, glm::mat4 modelMatrix, Shader* shader_p) {
 }
 
 /**
+ * Clears the vector of models for the scene
+ * 
+ * @returns void
+ */
+void Scene::ClearModels() {
+    models.clear();
+}
+
+/**
  * Sets the camera to use for rendering the scene
  *
  * @param cam A pointer to the camera object
@@ -252,7 +261,7 @@ void Scene::SetCamera(Camera* cam) {
 }
 
 /**
- * updates the view and porjection matrices for the scene
+ * Updates the view and projection matrices for the scene
  *
  * @param screenWidth   The width of the screen in pixels
  * @param screenHeight  The height of the screen in pixels

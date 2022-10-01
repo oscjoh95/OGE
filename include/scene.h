@@ -39,6 +39,9 @@ class Scene {
     // Adds a model to the scene
     void AddModel(Model* model_p, glm::mat4 modelMatrix, Shader* shader_p);
 
+    // Clears the vector of model data
+    void ClearModels();
+
     // Sets the scene's camera
     void SetCamera(Camera* cam);
 
