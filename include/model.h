@@ -22,6 +22,9 @@
 
 class Model {
  public:
+    // Default constructor
+    Model() = default;
+
     // Constructor with path to the model dir 
     Model(std::string const& path);
 

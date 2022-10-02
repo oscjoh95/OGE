@@ -221,6 +221,7 @@ void Scene::Draw() {
         // Set matrices and draw
         modelData.shader_p->use();
         SetModelUniforms(modelData.shader_p, modelData.vec3_uniforms);
+        modelData.shader_p->setVec3("viewPos", camera->Position);
         modelData.shader_p->setMat4("view", view);
         modelData.shader_p->setMat4("projection", projection);
         modelData.shader_p->setMat4("model", modelData.modelMatrix);

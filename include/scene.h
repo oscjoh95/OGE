@@ -48,7 +48,7 @@ class Scene {
         Model* model_p,
         glm::mat4 modelMatrix,
         Shader* shader_p,
-        std::vector<UniformData<glm::vec3>> vec3_uniforms);
+        std::vector<UniformData<glm::vec3>> vec3_uniforms = {});
 
     // Clears the vector of model data
     void ClearModels();
