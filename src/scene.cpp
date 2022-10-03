@@ -1,164 +1,136 @@
 #include <scene.h>
 
 /**
- * Checks for the closest model in the scene that the ray that goes
- * through the camera and (screenX, screenY) intersects with.
+ * Check for if a ray intersects with the bounding box of an object.
  *
- * @param screenX       The screen x coordinate (from bottom left)
- * @param screenY       The screen y coordinate (from bottom left)
- * @param screenWidth   The width of the screen in pixels
- * @param screenHeight  The height of the screen in pixels
- * @param distance_out  Output for the distance to the closest object.
- *                      Undefined if no object was intersected
- * @param model_out     Output for the closest model that was
- *                      intersected. Undefined if no object was
- *                      intersected
+ * @param rayOrigin     The origin of the ray
+ * @param rayDir        The direction of the ray   
+ * @param modelMatrix   The model matrix of the model
+ * @param aabb_min      The minimum x,y,z coordinates of the model
+ * @param aabb_max      The maximum x,y,z coordinates of the model
+ * @param distance_out  Output for the distance to the object,
+ *                      Undefined if there's no intersection.
  * 
- * @returns true if a model was intersected, false otherwise
+ * @returns true if there is an intersection, false otherwise
  */
 bool Scene::IsRayOBBIntersecting(
-    int screenX, int screenY,
-    int screenWidth, int screenHeight,
-    float& distance_out,
-    Model* model_out) {
+    glm::vec3 rayOrigin,
+    glm::vec3 rayDir,
+    glm::mat4 modelMatrix,
+    glm::vec3 aabb_min,
+    glm::vec3 aabb_max,
+    float& distance_out) {
 
-    // Set variables that are common for all models
-    glm::vec3 rayOrigin;
-    glm::vec3 rayDir;
-    ScreenPosToWorldRay(
-        screenX, screenY,
-        screenWidth, screenHeight,
-        rayOrigin,
-        rayDir);
+    float tMin = 0.0f;
+    float tMax = 100000.0f;
 
-    float minIntersectionDist = 100.0f;
-    Model* model = nullptr;
+    // Create OBB for model
+    glm::vec3 OBBposition(modelMatrix[3].x, modelMatrix[3].y, modelMatrix[3].z);
+    glm::vec3 delta = OBBposition - rayOrigin;
 
-    // Check for each model and pick the closest
-    for (int i = 0; i < models.size(); i++){
-        float tMin = 0.0f;
-        float tMax = 100000.0f;
+    // Test with x axis
+    {
+        glm::vec3 xaxis(modelMatrix[0].x, modelMatrix[0].y, modelMatrix[0].z);
+        float e = glm::dot(xaxis, delta);
+        float f = glm::dot(rayDir, xaxis);
 
-        // Create OBB for model
-        auto modelMatrix = models.at(i).modelMatrix;
-        glm::vec3 OBBposition(modelMatrix[3].x, modelMatrix[3].y, modelMatrix[3].z);
-        glm::vec3 delta = OBBposition - rayOrigin;
-        // Max and min coordinates of object
-        glm::vec3 aabb_min = models.at(i).model_p->GetMinCoords();
-        glm::vec3 aabb_max = models.at(i).model_p->GetMaxCoords();
+        if (fabs(f) > 0.001f) {
+            float t1 = (e + aabb_min.x) / f;  // "Left" plane
+            float t2 = (e + aabb_max.x) / f;  // "Right" plane
 
-        // Test with x axis
-        {
-            glm::vec3 xaxis(modelMatrix[0].x, modelMatrix[0].y, modelMatrix[0].z);
-            float e = glm::dot(xaxis, delta);
-            float f = glm::dot(rayDir, xaxis);
-
-            if (fabs(f) > 0.001f) {
-                float t1 = (e + aabb_min.x) / f;  // "Left" plane
-                float t2 = (e + aabb_max.x) / f;  // "Right" plane
-
-                // Switch t1 and t2 if t2 is left
-                if (t1 > t2) {
-                    float temp = t1;
-                    t1 = t2;
-                    t2 = temp;
-                }
-
-                if (t2 < tMax) {
-                    tMax = t2;
-                }
-                if (t1 > tMin) {
-                    tMin = t1;
-                }
-
-                if (tMax < tMin) {
-                    continue;
-                }
-            } else {
-                if (-e + aabb_min.x > 0.0f || -e + aabb_max.x < 0.0f) {
-                    continue;
-                }
+            // Switch t1 and t2 if t2 is left
+            if (t1 > t2) {
+                float temp = t1;
+                t1 = t2;
+                t2 = temp;
             }
-        }
 
-        // Test with y axis
-        {
-            glm::vec3 yaxis(modelMatrix[1].x, modelMatrix[1].y, modelMatrix[1].z);
-            float e = glm::dot(yaxis, delta);
-            float f = glm::dot(rayDir, yaxis);
-
-            if (fabs(f) > 0.001f) {
-                float t1 = (e + aabb_min.y) / f;  // "Left" plane
-                float t2 = (e + aabb_max.y) / f;  // "Right" plane
-
-                // Switch t1 and t2 if t2 is left
-                if (t1 > t2) {
-                    float temp = t1;
-                    t1 = t2;
-                    t2 = temp;
-                }
-
-                if (t2 < tMax) {
-                    tMax = t2;
-                }
-                if (t1 > tMin) {
-                    tMin = t1;
-                }
-
-                if (tMax < tMin) {
-                    continue;
-                }
-            } else {
-                if (-e + aabb_min.y > 0.0f || -e + aabb_max.y < 0.0f) {
-                    continue;
-                }
+            if (t2 < tMax) {
+                tMax = t2;
             }
-        }
-
-        // Test with z axis
-        {
-            glm::vec3 zaxis(modelMatrix[2].x, modelMatrix[2].y, modelMatrix[2].z);
-            float e = glm::dot(zaxis, delta);
-            float f = glm::dot(rayDir, zaxis);
-
-            if (fabs(f) > 0.001f) {
-                float t1 = (e + aabb_min.z) / f;  // "Left" plane
-                float t2 = (e + aabb_max.z) / f;  // "Right" plane
-
-                // Switch t1 and t2 if t2 is left
-                if (t1 > t2) {
-                    float temp = t1;
-                    t1 = t2;
-                    t2 = temp;
-                }
-
-                if (t2 < tMax) {
-                    tMax = t2;
-                }
-                if (t1 > tMin) {
-                    tMin = t1;
-                }
-
-                if (tMax < tMin) {
-                    continue;
-                }
-            } else {
-                if (-e + aabb_min.z > 0.0f || -e + aabb_max.z < 0.0f) {
-                    continue;
-                }
+            if (t1 > tMin) {
+                tMin = t1;
             }
-        }
-        // We have an intersection
-        if (tMin < minIntersectionDist) {
-            minIntersectionDist = tMin;
-            model = models.at(i).model_p;
+
+            if (tMax < tMin) {
+                return false;
+            }
+        } else {
+            if (-e + aabb_min.x > 0.0f || -e + aabb_max.x < 0.0f) {
+                return false;
+            }
         }
     }
-    if (model == nullptr) {
-        return false;
+
+    // Test with y axis
+    {
+        glm::vec3 yaxis(modelMatrix[1].x, modelMatrix[1].y, modelMatrix[1].z);
+        float e = glm::dot(yaxis, delta);
+        float f = glm::dot(rayDir, yaxis);
+
+        if (fabs(f) > 0.001f) {
+            float t1 = (e + aabb_min.y) / f;  // "Left" plane
+            float t2 = (e + aabb_max.y) / f;  // "Right" plane
+
+            // Switch t1 and t2 if t2 is left
+            if (t1 > t2) {
+                float temp = t1;
+                t1 = t2;
+                t2 = temp;
+            }
+
+            if (t2 < tMax) {
+                tMax = t2;
+            }
+            if (t1 > tMin) {
+                tMin = t1;
+            }
+
+            if (tMax < tMin) {
+                return false;
+            }
+        } else {
+            if (-e + aabb_min.y > 0.0f || -e + aabb_max.y < 0.0f) {
+                return false;
+            }
+        }
     }
-    distance_out = minIntersectionDist;
-    model_out = model;
+
+    // Test with z axis
+    {
+        glm::vec3 zaxis(modelMatrix[2].x, modelMatrix[2].y, modelMatrix[2].z);
+        float e = glm::dot(zaxis, delta);
+        float f = glm::dot(rayDir, zaxis);
+
+        if (fabs(f) > 0.001f) {
+            float t1 = (e + aabb_min.z) / f;  // "Left" plane
+            float t2 = (e + aabb_max.z) / f;  // "Right" plane
+
+            // Switch t1 and t2 if t2 is left
+            if (t1 > t2) {
+                float temp = t1;
+                t1 = t2;
+                t2 = temp;
+            }
+
+            if (t2 < tMax) {
+                tMax = t2;
+            }
+            if (t1 > tMin) {
+                tMin = t1;
+            }
+
+            if (tMax < tMin) {
+                return false;
+            }
+        } else {
+            if (-e + aabb_min.z > 0.0f || -e + aabb_max.z < 0.0f) {
+                return false;
+            }
+        }
+    }
+
+    distance_out = tMin;
     return true;
 }
 

@@ -25,13 +25,14 @@ class Scene {
     // Constructor
     Scene() = default;
 
-    // Looks for the closest OBB that is intersected 
-    // with a ray through screenX, screenY
+    // Check for intersection of a ray with the bounding box of an object
     bool IsRayOBBIntersecting(
-        int screenX, int screenY,
-        int screenWidth, int screenHeight,
-        float& distance_out,
-        Model* model_out);
+        glm::vec3 rayOrigin,
+        glm::vec3 rayDir,
+        glm::mat4 modelMatrix,
+        glm::vec3 aabb_min,
+        glm::vec3 aabb_max,
+        float& distance_out);
     
     // Calculates the ray through screenX, screenY
     void ScreenPosToWorldRay (

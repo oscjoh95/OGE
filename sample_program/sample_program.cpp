@@ -123,24 +123,6 @@ int main(int argc, char** argv) {
         // Update matrices in the scene
         scene.UpdateMatrices(SCR_WIDTH, SCR_HEIGHT);
 
-        // Check if any object are clicked
-        if (markObject) {
-            float dist;
-            double xPos, yPos;
-            glfwGetCursorPos(window, &xPos, &yPos);
-            Model* clickedObject;
-            if (scene.IsRayOBBIntersecting(
-                (float)xPos, (float)(SCR_HEIGHT - yPos),
-                SCR_WIDTH, SCR_HEIGHT,
-                dist,
-                clickedObject)) {
-                    std::cout << clickedObject << " was clicked at distance " << dist << std::endl;
-                } else {
-                    std::cout << "No object" << std::endl;
-                }
-            markObject = false;
-        }
-
         // Draw scene
         scene.Draw();
 
